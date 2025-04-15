@@ -23,8 +23,26 @@
  ******************************************************************************/
 
 #include <gtest/gtest.h>
+#include <string>
 
 #include "../ringbuffer.h"
+
+namespace {
+
+struct Test {
+	Test(const bool overwrite) : ringBuffer(3, overwrite) {
+		std::cout << "Test::Test()" << std::endl;
+	}
+	std::string getString() {
+		return std::string(ringBuffer.c.cbegin(), ringBuffer.c.cend());
+	}
+
+	RingBuffer<char> ringBuffer;
+};
+}
+
+
+using RingBufferAccessor = Test;
 
 
 class RingBufferTest: public ::testing::Test
@@ -34,26 +52,92 @@ protected:
 	}
 };
 
-/* Name:                RingBufferTest.RingBufferInit
- *
- * Tested functions:    RingBuffer()
- *
- * Description:         Test the RingBuffer constructor
- */
-TEST_F(RingBufferTest, RingBufferCtorDefault)
+
+TEST_F(RingBufferTest, CtorDefault)
 {
-	RingBuffer<char> ringBuffer1;
-	// TODO
+	RingBuffer<char> ringBuffer;
+	ASSERT_EQ(1, ringBuffer.max_size());
+	ASSERT_EQ(0, ringBuffer.size());
 }
 
-TEST_F(RingBufferTest, RingBufferCtorOverwritable)
+TEST_F(RingBufferTest, CtorOverwritable)
 {
-	RingBuffer<char> ringBuffer1(3, true);
-	// TODO
+	RingBuffer<char> ringBuffer(3, true);
+	ASSERT_EQ(3, ringBuffer.max_size());
+	ASSERT_EQ(0, ringBuffer.size());
 }
 
-TEST_F(RingBufferTest, RingBufferCtorNotOveritable)
+TEST_F(RingBufferTest, CtorNotOveritable)
 {
-	RingBuffer<char> ringBuffer1(3, false);
-	// TODO
+	RingBuffer<char> ringBuffer(3, false);
+	ASSERT_EQ(3, ringBuffer.max_size());
+	ASSERT_EQ(0, ringBuffer.size());
+}
+
+TEST_F(RingBufferTest, InsertOverwritable)
+{
+	RingBufferAccessor ringBufferAccessor(true);
+
+	ASSERT_EQ(3, ringBufferAccessor.ringBuffer.max_size());
+	ASSERT_EQ(0, ringBufferAccessor.ringBuffer.size());
+
+	ringBufferAccessor.ringBuffer.put('a');
+	ASSERT_EQ(1, ringBufferAccessor.ringBuffer.size());
+	ASSERT_EQ('a', ringBufferAccessor.ringBuffer.front());
+	ASSERT_EQ('a', ringBufferAccessor.ringBuffer.back());
+	ASSERT_EQ("a", ringBufferAccessor.getString());
+
+	ringBufferAccessor.ringBuffer.put('b');
+	ASSERT_EQ(2, ringBufferAccessor.ringBuffer.size());
+	ASSERT_EQ('a', ringBufferAccessor.ringBuffer.front());
+	ASSERT_EQ('b', ringBufferAccessor.ringBuffer.back());
+	ASSERT_EQ("ab", ringBufferAccessor.getString());
+
+	ringBufferAccessor.ringBuffer.put('c');
+	ASSERT_EQ(3, ringBufferAccessor.ringBuffer.size());
+	ASSERT_EQ('a', ringBufferAccessor.ringBuffer.front());
+	ASSERT_EQ('c', ringBufferAccessor.ringBuffer.back());
+	ASSERT_EQ("abc", ringBufferAccessor.getString());
+
+	ringBufferAccessor.ringBuffer.put('d');
+	ASSERT_EQ(3, ringBufferAccessor.ringBuffer.size());
+	ASSERT_EQ('b', ringBufferAccessor.ringBuffer.front());
+	ASSERT_EQ('d', ringBufferAccessor.ringBuffer.back());
+	ASSERT_EQ("bcd", ringBufferAccessor.getString());
+
+	ringBufferAccessor.ringBuffer.put('e');
+	ASSERT_EQ(3, ringBufferAccessor.ringBuffer.size());
+	ASSERT_EQ('c', ringBufferAccessor.ringBuffer.front());
+	ASSERT_EQ('e', ringBufferAccessor.ringBuffer.back());
+	ASSERT_EQ("cde", ringBufferAccessor.getString());
+}
+
+TEST_F(RingBufferTest, InsertNotOverwritable)
+{
+	RingBufferAccessor ringBufferAccessor(false);
+
+	ASSERT_EQ(3, ringBufferAccessor.ringBuffer.max_size());
+	ASSERT_EQ(0, ringBufferAccessor.ringBuffer.size());
+
+	ringBufferAccessor.ringBuffer.put('a');
+	ASSERT_EQ(1, ringBufferAccessor.ringBuffer.size());
+	ASSERT_EQ('a', ringBufferAccessor.ringBuffer.front());
+	ASSERT_EQ('a', ringBufferAccessor.ringBuffer.back());
+	ASSERT_EQ("a", ringBufferAccessor.getString());
+
+	ringBufferAccessor.ringBuffer.put('b');
+	ASSERT_EQ(2, ringBufferAccessor.ringBuffer.size());
+	ASSERT_EQ('a', ringBufferAccessor.ringBuffer.front());
+	ASSERT_EQ('b', ringBufferAccessor.ringBuffer.back());
+	ASSERT_EQ("ab", ringBufferAccessor.getString());
+
+	ringBufferAccessor.ringBuffer.put('c');
+	ASSERT_EQ(3, ringBufferAccessor.ringBuffer.size());
+	ASSERT_EQ('a', ringBufferAccessor.ringBuffer.front());
+	ASSERT_EQ('c', ringBufferAccessor.ringBuffer.back());
+	ASSERT_EQ("abc", ringBufferAccessor.getString());
+
+	EXPECT_THROW({
+        ringBufferAccessor.ringBuffer.put('d');
+    }, std::overflow_error);
 }

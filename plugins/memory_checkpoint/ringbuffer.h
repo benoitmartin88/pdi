@@ -23,22 +23,43 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
-#include <forward_list>
+#include <queue>
 
 namespace {
 
+struct Test;    // used for unit tests
+
 template<typename T>
-class RingBuffer {
+class RingBuffer : private std::queue<T> {
+    friend struct Test;
+    using Base = std::queue<T>;
+    using capacity_type = uint8_t;
+
 public:
-    RingBuffer() : data(1), capacity(1), overwrite(true) {
+    RingBuffer() : RingBuffer(1, true) {
     }
 
-    RingBuffer(const uint8_t capacity, const bool overwrite) : data(capacity), capacity(capacity), overwrite(overwrite) {
-
+    RingBuffer(const capacity_type capacity, const bool overwrite) 
+    : capacity(capacity), overwrite(overwrite) {
     }
     
-    void put(const T&) {
-        // TODO
+    void put(const T& el) {
+        if(size()==capacity) {
+            if(overwrite) {
+                Base::pop();
+            } else {
+                throw std::overflow_error("Ring buffer is full.");
+            }
+        }
+        Base::push(el);
+    }
+
+    T front() {
+        return Base::front();
+    }
+
+    T back() {
+        return Base::back();
     }
 
     T pop() {
@@ -49,11 +70,23 @@ public:
         // TODO
     }
 
+    void clear() noexcept {
+        // TODO
+    }
+
+    capacity_type max_size() const noexcept {
+        return capacity;
+    }
+
+    auto size() const {
+        return std::queue<T>::size();
+    }
+
 
 private:
-    std::forward_list<T> data;
-    const uint8_t capacity;
+    const capacity_type capacity;
     const bool overwrite;
+    // typename std::forward_list<T>::iterator it;
 };
 
 }
