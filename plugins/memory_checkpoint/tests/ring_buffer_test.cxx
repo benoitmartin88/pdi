@@ -30,13 +30,14 @@
 namespace {
 
 struct Test {
-	Test(const bool overwrite) : ringBuffer(3, overwrite) {
+	Test(const bool overwrite) : ringBuffer(CAPACITY, overwrite) {
 		std::cout << "Test::Test()" << std::endl;
 	}
 	std::string getString() {
 		return std::string(ringBuffer.c.cbegin(), ringBuffer.c.cend());
 	}
 
+	static constexpr uint8_t CAPACITY = 3;
 	RingBuffer<char> ringBuffer;
 };
 }
@@ -78,7 +79,7 @@ TEST_F(RingBufferTest, InsertOverwritable)
 {
 	RingBufferAccessor ringBufferAccessor(true);
 
-	ASSERT_EQ(3, ringBufferAccessor.ringBuffer.max_size());
+	ASSERT_EQ(RingBufferAccessor::CAPACITY, ringBufferAccessor.ringBuffer.max_size());
 	ASSERT_EQ(0, ringBufferAccessor.ringBuffer.size());
 
 	ringBufferAccessor.ringBuffer.put('a');
@@ -116,7 +117,7 @@ TEST_F(RingBufferTest, InsertNotOverwritable)
 {
 	RingBufferAccessor ringBufferAccessor(false);
 
-	ASSERT_EQ(3, ringBufferAccessor.ringBuffer.max_size());
+	ASSERT_EQ(RingBufferAccessor::CAPACITY, ringBufferAccessor.ringBuffer.max_size());
 	ASSERT_EQ(0, ringBufferAccessor.ringBuffer.size());
 
 	ringBufferAccessor.ringBuffer.put('a');
@@ -140,4 +141,22 @@ TEST_F(RingBufferTest, InsertNotOverwritable)
 	EXPECT_THROW({
         ringBufferAccessor.ringBuffer.put('d');
     }, std::overflow_error);
+}
+
+TEST_F(RingBufferTest, clear)
+{
+	RingBufferAccessor ringBufferAccessor(true);
+	ASSERT_EQ(0, ringBufferAccessor.ringBuffer.size());
+
+	ringBufferAccessor.ringBuffer.put('a');
+	ringBufferAccessor.ringBuffer.put('b');
+	ringBufferAccessor.ringBuffer.put('c');
+	ASSERT_EQ(3, ringBufferAccessor.ringBuffer.size());
+	ASSERT_EQ('a', ringBufferAccessor.ringBuffer.front());
+	ASSERT_EQ('c', ringBufferAccessor.ringBuffer.back());
+	ASSERT_EQ("abc", ringBufferAccessor.getString());
+
+	ringBufferAccessor.ringBuffer.clear();
+	ASSERT_EQ(0, ringBufferAccessor.ringBuffer.size());
+	ASSERT_EQ("", ringBufferAccessor.getString());
 }

@@ -54,11 +54,11 @@ public:
         Base::push(el);
     }
 
-    T front() {
+    T front() const {
         return Base::front();
     }
 
-    T back() {
+    T back() const {
         return Base::back();
     }
 
@@ -66,12 +66,9 @@ public:
         // TODO
     }
 
-    T peek() {
-        // TODO
-    }
-
     void clear() noexcept {
-        // TODO
+        Base empty;
+        Base::swap(empty);
     }
 
     capacity_type max_size() const noexcept {
@@ -79,14 +76,13 @@ public:
     }
 
     auto size() const {
-        return std::queue<T>::size();
+        return Base::size();
     }
 
 
 private:
     const capacity_type capacity;
     const bool overwrite;
-    // typename std::forward_list<T>::iterator it;
 };
 
 }
