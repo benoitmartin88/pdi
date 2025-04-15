@@ -68,6 +68,7 @@ option(BUILD_DECL_HDF5_PLUGIN   "Build Decl'HDF5 plug-in" ON)
 option(BUILD_DECL_NETCDF_PLUGIN "Build Decl'NetCDF plug-in" ON)
 option(BUILD_FORTRAN            "Build with Fortran support" ON)
 option(BUILD_HDF5_PARALLEL      "Build Decl'HDF5 in parallel mode" ON)
+option(BUILD_MEMORY_CHECKPOINT_PLUGIN         "Build Memory checkpoint plug-in" OFF)
 option(BUILD_MPI_PLUGIN         "Build MPI plug-in" ON)
 option(BUILD_NETCDF_PARALLEL    "Build Decl'NetCDF in parallel mode" ON)
 option(BUILD_PYCALL_PLUGIN      "Build Pycall plug-in" "${BUILD_UNSTABLE}")
@@ -77,8 +78,8 @@ option(BUILD_SERIALIZE_PLUGIN   "Build Serialize plug-in" ON)
 option(BUILD_SHARED_LIBS        "Build shared libraries rather than static ones" ON)
 option(BUILD_TRACE_PLUGIN       "Build Trace plugin" ON)
 option(BUILD_USER_CODE_PLUGIN   "Build User-code plugin" ON)
-option(BUILD_JSON_PLUGIN        "Build JSON plugin" OFF)
-option(BUILD_DEISA_PLUGIN   	"Build Deisa plug-in" OFF)
+option(BUILD_JSON_PLUGIN        "Build JSON plugin" OFF) # TODO: alphabetical order
+option(BUILD_DEISA_PLUGIN   	"Build Deisa plug-in" OFF) # TODO: alphabetical order 
 
 
 
@@ -118,6 +119,9 @@ if("${BUILD_DECL_NETCDF_PLUGIN}")
 endif()
 if("${BUILD_DEISA_PLUGIN}")
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/plugins/deisa/cmake")
+endif()
+if("${BUILD_MEMORY_CHECKPOINT_PLUGIN}")
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/plugins/memory_checkpoint/cmake")
 endif()
 if("${BUILD_MPI_PLUGIN}")
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/plugins/mpi/cmake")
@@ -468,6 +472,12 @@ sbuild_add_module(PDI
 	SUBSTEPS test
 )
 
+sbuild_add_module(MEMORY_CHECKPOINT_PLUGIN
+	ENABLE_BUILD_FLAG BUILD_MEMORY_CHECKPOINT_PLUGIN
+	SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/plugins/memory_checkpoint"
+	DEPENDS PDI
+	SUBSTEPS test
+)
 
 sbuild_add_module(MPI_PLUGIN
 	ENABLE_BUILD_FLAG BUILD_MPI_PLUGIN
